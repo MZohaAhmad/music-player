@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Music Player</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #e7e7e7;
+        transition: 0.3s;
+    }
+
+    .dark-mode {
+        background: #1c1c1c;
+        color: white;
+    }
+
+    header {
+        text-align: center;
+        padding: 20px;
+        font-size: 36px;
+        font-weight: 700;
+    }
+
+    .container {
+        display: flex;
+        padding: 20px;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    /* Left Panel */
+    .left-panel, .right-panel {
+        width: 25%;
+        background: #74bde6;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px #0003;
+    }
+
+    .left-panel h2, .right-panel h2 {
+        margin-top: 10px;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    select {
+        padding: 7px;
+        border-radius: 6px;
+        margin-top: 7px;
+    }
+
+    .song-item {
+        background: #0e7abf;
+        padding: 12px;
+        margin: 10px 0;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .song-item:hover {
+        background: #095783;
+    }
+
+    /* Center panel */
+    .center-panel {
+        width: 35%;
+        background: #88cff4;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px #0003;
+        text-align: center;
+    }
+
+    .track-box {
+        background: #0f70a7;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 12px #4c2b87;
+        margin-bottom: 20px;
+    }
+
+    .track-box img {
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    /* Right panel */
+    input {
+        padding: 9px;
+        width: 70%;
+        border-radius: 6px;
+        border: 1px solid #999;
+    }
+
+    button {
+        padding: 9px 14px;
+        background: #9a45ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #7d2fd6;
+    }
+
+    .playlist-item {
+        background: white;
+        margin: 8px 0;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    /* Dark Mode Styling */
+    .dark-mode .left-panel,
+    .dark-mode .right-panel,
+    .dark-mode .center-panel {
+        background: #2e6480;
+    }
+
+    .dark-mode .song-item {
+        background: #4682b4;
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    Music Player
+    <div style="float:right; margin-right: 30px;">
+        <label style="cursor: pointer;">
+            <input type="checkbox" id="darkToggle"> Dark
+        </label>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        <label><strong>Filter by Genre:</strong></label><br>
+        <select id="genreFilter">
+            <option value="All">All</option>
+            <option value="Rock">Rock</option>
+            <option value="Pop">Pop</option>
+            <option value="Hip Hop">Hip Hop</option>
+        </select>
+
+        <h2>All Songs</h2>
+        <div id="songList"></div>
+    </div>
+
+    <!-- CENTER PANEL -->
+    <div class="center-panel">
+        <div class="track-box">
+            <img id="trackImage" src="https://via.placeholder.com/400x250" />
+            <h2 id="trackTitle">Select a Song</h2>
+            <p id="trackArtist"></p>
+        </div>
+
+        <audio id="audioPlayer" controls style="width: 100%;">
+            <source id="audioSource" src="">
+        </audio>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+        <input type="text" id="playlistName" placeholder="Enter playlist name">
+        <button onclick="createPlaylist()">Create Playlist</button>
+
+        <h2>Current Playlist</h2>
+        <div id="currentPlaylist"></div>
+
+        <h2>All Playlists</h2>
+        <div id="allPlaylists"></div>
+    </div>
+</div>
+
+
+<script>
+/* Song Data (Example) */
+const songs = [
+    { title: "Shape Of You", artist: "Ed Sheeran", genre: "Pop", img: "https://via.placeholder.com/400x250", audio: "" },
+    { title: "All Of Me", artist: "Adele", genre: "Pop", img: "https://via.placeholder.com/400x250", audio: "" },
+    { title: "Somelike Like You", artist: "Adele", genre: "Pop", img: "https://via.placeholder.com/400x250", audio: "" },
+    { title: "Wonderwall", artist: "Oasis", genre: "Rock", img: "https://via.placeholder.com/400x250", audio: "" },
+    { title: "Sugar", artist: "Maroon", genre: "Pop", img: "https://via.placeholder.com/400x250", audio: "" },
+    { title: "Locked Away", artist: "R. City", genre: "Hip Hop", img: "https://via.placeholder.com/400x250", audio: "" },
+];
+
+function loadSongs(filter = "All") {
+    const list = document.getElementById("songList");
+    list.innerHTML = "";
+    songs
+        .filter(song => filter === "All" || song.genre === filter)
+        .forEach(song => {
+            const div = document.createElement("div");
+            div.className = "song-item";
+            div.innerText = `${song.title} - ${song.artist}`;
+            div.onclick = () => playSong(song);
+            list.appendChild(div);
+        });
+}
+
+function playSong(song) {
+    document.getElementById("trackImage").src = song.img;
+    document.getElementById("trackTitle").textContent = song.title;
+    document.getElementById("trackArtist").textContent = song.artist;
+    document.getElementById("audioSource").src = song.audio;
+    document.getElementById("audioPlayer").load();
+}
+
+document.getElementById("genreFilter").onchange = (e) => loadSongs(e.target.value);
+
+loadSongs();
+
+/* Playlists */
+let playlists = [];
+
+function createPlaylist() {
+    const name = document.getElementById("playlistName").value.trim();
+    if (!name) return alert("Enter playlist name");
+
+    playlists.push({ name });
+    updatePlaylists();
+}
+
+function updatePlaylists() {
+    const all = document.getElementById("allPlaylists");
+    all.innerHTML = "";
+
+    playlists.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "playlist-item";
+        div.textContent = p.name;
+        all.appendChild(div);
+    });
+}
+
+/* Dark Mode */
+document.getElementById("darkToggle").onclick = () => {
+    document.body.classList.toggle("dark-mode");
+};
+</script>
+
+</body>
+</html>
